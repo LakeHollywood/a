@@ -1,0 +1,32 @@
+# /etc/sudoers.d/sts-bench
+#
+# Least-privilege elevation for the STS chaos/telemetry benchmark on the
+# Jetson AGX Orin. Lets the unprivileged 'sts_user' run ONLY the two tools
+# that need root, without a password, so CI/systemd can run the pipeline as
+# a non-root user (reports and ledger files stay user-owned).
+#
+# INSTALL (always syntax-check before it goes live; never edit /etc/sudoers
+# by hand — a broken main sudoers file can lock you out of the device):
+#     sudo install -m 0440 bench/sudoers.d/sts-bench /etc/sudoers.d/sts-bench
+#     sudo visudo -cf /etc/sudoers.d/sts-bench   # must print "parsed OK"
+#     sudo -l -U sts_user                        # verify what it grants
+#
+# VERIFY PATHS FIRST — this whitelist matches on ABSOLUTE paths only. If a
+# binary lives elsewhere on your L4T image, update the line to match:
+#     command -v tc           # often /usr/sbin/tc (iproute2)
+#     command -v stress-ng    # often /usr/bin/stress-ng
+# On merged-/usr images /sbin/tc is a symlink to /usr/sbin/tc; list the real
+# resolved path here, not the symlink, or sudo will refuse the invocation.
+#
+# SECURITY NOTES:
+#   * Do NOT widen this to "NOPASSWD: ALL" or add shell/python — that is a
+#     trivial root escalation. tc/netem and stress-ng are already arbitrary
+#     DoS vectors, so keep this scoped to the dedicated bench account only.
+#   * `stress-ng` as root can thrash memory/IO; that is intentional here
+#     (it is the fault-injection tool), which is why sts_user should be a
+#     service account with nothing else valuable in its home directory.
+#   * The Python hooks invoke these as `sudo -n <absolute-path>` (see
+#     bench/hardware_hooks.py::_elevated), so a missing rule fails fast
+#     instead of hanging on a password prompt mid-run.
+
+sts_user ALL=(root) NOPASSWD: /usr/sbin/tc, /usr/bin/stress-ng
