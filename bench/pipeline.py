@@ -130,7 +130,24 @@ def run_pipeline(phases: list[str], interface: str = "eth0") -> dict:
     # Rewrite results.json now that it carries the seal manifest.
     _write_json(os.path.join(output_dir, "results.json"), results)
 
+    # Post-flight telemetry correlation plots. Guarded so a plotting failure
+    # (missing matplotlib, malformed CSV, headless-env quirks) can never mask
+    # a successful benchmark run or corrupt the sealed artifacts above. This
+    # runs BEFORE report generation so report.md can embed the charts; the
+    # final results.json write below then carries the chart manifest too.
+    try:
+        from bench.plot_telemetry import parse_tegrastats_log, generate_correlation_plots
+        telemetry_df = parse_tegrastats_log(telemetry_path)
+        charts = generate_correlation_plots(
+            telemetry_df, os.path.join(output_dir, "results.json"), output_dir
+        )
+        if charts:
+            results["charts"] = charts
+    except Exception as e:
+        print(f"[WARN] Post-flight telemetry plotting failed: {e}")
+
     generate_markdown_report(results, output_dir)
+    _write_json(os.path.join(output_dir, "results.json"), results)
 
     if results["status"] != "success":
         raise SystemExit(1)
@@ -190,6 +207,13 @@ def generate_markdown_report(results: dict, out_dir: str) -> None:
             f"rows: `{led['audit']['rows_checked']}`",
             f"**Seal:** {'`' + seal['signature'][:16] + '…`' if seal else 'NOT SEALED (audit failed)'}",
         ]
+    charts = results.get("charts") or []
+    if charts:
+        lines.append("")
+        lines.append("## Telemetry correlation charts")
+        for c in charts:
+            # report.md lives in the same dir as the PNGs; link by basename.
+            lines.append(f"![{os.path.basename(c)}]({os.path.basename(c)})")
     with open(os.path.join(out_dir, "report.md"), "w") as f:
         f.write("\n".join(lines) + "\n")
 
