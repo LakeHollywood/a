@@ -57,9 +57,20 @@ def run_pipeline(phases: list[str], interface: str = "eth0") -> dict:
                 # Stress combines network degradation AND hardware saturation.
                 # Nested context managers: netem applies first, stress-ng second;
                 # teardown unwinds in reverse (stress-ng dies before tc rules).
+                #
+                # soak_s: how long the fault window stays open. stress-ng needs
+                # ~1s just to spin up its workers, so a mock/instant workload
+                # would tear the hooks down before any load lands (the measured
+                # TPS would be baseline TPS with a fake label). Real inference
+                # benchmarks should pass soak_s=0 and let their own runtime
+                # define the window.
+                soak_s = float(os.getenv("STS_STRESS_SOAK_S", "5"))
                 with network_degradation(interface=interface, loss="15%", delay="30ms", jitter="10ms"):
                     with hardware_saturation(cpu_workers=4, vm_workers=2, io_workers=2):
                         payload = run_stress_benchmark()
+                        if soak_s > 0:
+                            time.sleep(soak_s)
+                payload["soak_s"] = soak_s
 
             elif phase == "verification":
                 # Verification runs clean to ensure the ledger recovered and
