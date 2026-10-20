@@ -34,11 +34,20 @@ from validator import (
     validate_sequence_continuity,
     validate_hash_chain,
 )
+import approvalgate
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("CoreCommandAPI")
 
 app = FastAPI(title="STS Core Command Anchor Server")
+
+
+def _worm_conn():
+    """Fresh connection to the Core WORM store for the ApprovalGate router."""
+    return init_core_db()
+
+
+app.include_router(approvalgate.build_router(_worm_conn))
 
 
 # Dependency to get DB connection
@@ -198,7 +207,28 @@ async def receive_anchor_batch(
         logger.error("Batch commit failed: %s", e)
         raise HTTPException(status_code=500, detail="WORM commit failed")
 
+    # Feed the ApprovalGate risk model: every policy evaluation is counted,
+    # rejections spike the rejection_ratio component that gates forced syncs.
+    gate = approvalgate.get_store()
+    for item in acknowledged:
+        gate.record_event("acked", device_id=device_of_item(request, item["id"]))
+    for r in rejected:
+        gate.record_event(
+            "rejected",
+            device_id=device_of_item(request, r["id"]),
+            reason=r.get("reason"),
+        )
+
     return {"acknowledged": acknowledged, "rejected": rejected}
+
+
+def device_of_item(request: "BatchRequest", queue_id: int) -> str:
+    """Best-effort device attribution for a gate event."""
+    for it in request.batch:
+        if it.id == queue_id:
+            lid = it.payload.get("ledger_id")
+            return lid if isinstance(lid, str) else "?"
+    return "?"
 
 
 # --- Helper endpoint to provision a new edge node ---

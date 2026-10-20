@@ -706,6 +706,112 @@ class AnchorClient:
                        cp.anchor_id[:8], status)
         return {"anchor_id": cp.anchor_id, "seq": (cp.seq_start, cp.seq_end), "result": "PENDING_RETRY"}
 
+    # -- ApprovalGate-aware forced flush -----------------------------------
+    GATE_ENDPOINT_DEFAULT = "http://localhost:8000/approvalgate"
+
+    def pending_count(self) -> int:
+        cur = self.quarantine._conn.execute(
+            "SELECT COUNT(*) FROM quarantine_queue WHERE status = 'PENDING'"
+        )
+        return cur.fetchone()[0]
+
+    async def _check_approval_gate(
+        self, forced: bool, override: Optional[dict] = None,
+        gate_base: Optional[str] = None, timeout_s: float = 5.0,
+    ) -> dict:
+        """Ask Core Command's ApprovalGate whether this flush may proceed.
+
+        Example (operator CLI):
+            curl -s http://localhost:8000/approvalgate/risk_score | jq '.score'
+            # If score > 75, require manual override or bundle approvals
+            # before executing flush_now.
+
+        Fail-closed policy: if the gate cannot be reached while forcing, we
+        refuse the forced flush (a partitioned node must not stampede the
+        WORM store unreviewed). Non-forced flushes never consult the gate.
+        """
+        if not forced:
+            return {"allowed": True, "reason": "normal flush: gate not consulted"}
+        gate_base = gate_base or os.environ.get(
+            "APPROVALGATE_ENDPOINT", self.GATE_ENDPOINT_DEFAULT)
+        body = {
+            "device_id": self.device_id,
+            "forced": True,
+            "pending_queue": self.pending_count(),
+        }
+        if override:
+            body["override"] = override
+        try:
+            timeout = aiohttp.ClientTimeout(total=timeout_s)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                # Report queue depth first so backlog feeds the risk model.
+                await session.post(
+                    f"{gate_base}/heartbeat",
+                    json={"device_id": self.device_id,
+                          "pending_queue": body["pending_queue"]},
+                )
+                async with session.post(f"{gate_base}/check_flush", json=body) as resp:
+                    decision = await resp.json()
+                    decision["allowed"] = decision.get("allowed", False) and resp.status == 200
+                    return decision
+        except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
+            return {"allowed": False,
+                    "reason": f"ApprovalGate unreachable while forcing flush ({exc}); fail-closed"}
+
+    async def flush_now(
+        self,
+        force: bool = False,
+        override: Optional[dict] = None,
+        gate_base: Optional[str] = None,
+    ) -> dict:
+        """Flush the quarantine queue to Core Command.
+
+        ``force=True`` is a *forced sync*: before touching the wire it checks
+        the ApprovalGate risk score (GET /approvalgate/risk_score via
+        POST /approvalgate/check_flush). If the score exceeds the threshold
+        (>75 by default), the flush proceeds only with a valid signed
+        operator override token or enough pre-registered bundle approvals;
+        otherwise it is refused and nothing is sent.
+        """
+        gate = await self._check_approval_gate(force, override, gate_base)
+        if not gate.get("allowed"):
+            risk = (gate.get("risk") or {}).get("score", "?")
+            logger.error(
+                "flush_now BLOCKED by ApprovalGate (risk=%s): %s", risk,
+                gate.get("reason"))
+            return {"flushed": 0, "blocked": True, "gate": gate}
+
+        flushed = await self.quarantine.flush_quarantine_queue(
+            sync_endpoint=self.endpoint)
+        # Reconcile engine checkpoint states from queue statuses.
+        for outcome in self._reconcile_after_flush():
+            logger.info("Reconciled %s -> %s", outcome["anchor_id"][:8],
+                        outcome["result"])
+        risk = (gate.get("risk") or {}).get("score", "-")
+        logger.info("flush_now complete: %d anchors synced (forced=%s, gate risk=%s)",
+                    flushed, force, risk)
+        return {"flushed": flushed, "blocked": False, "gate": gate}
+
+    def _reconcile_after_flush(self) -> List[dict]:
+        """Move engine checkpoints to ANCHORED/FAILED based on queue status."""
+        outcomes = []
+        rows = self.quarantine._conn.execute(
+            "SELECT anchor_id, status FROM quarantine_queue"
+            " WHERE status IN ('SYNCED','REJECTED')"
+        ).fetchall()
+        for anchor_id, qstatus in rows:
+            cp = self.engine.get_checkpoint(anchor_id) if hasattr(
+                self.engine, "get_checkpoint") else None
+            if cp is None or cp.status == "anchored":
+                continue
+            if qstatus == "SYNCED":
+                self.engine.confirm_checkpoint(anchor_id)
+                outcomes.append({"anchor_id": anchor_id, "result": "ANCHORED"})
+            elif qstatus == "REJECTED" and cp.status == "pending":
+                self.engine.mark_failed(anchor_id)
+                outcomes.append({"anchor_id": anchor_id, "result": "FAILED"})
+        return outcomes
+
 
 def _orchestrator_main(argv=None) -> int:
     """python3 -m bench.anchor --run-orchestrator ..."""
