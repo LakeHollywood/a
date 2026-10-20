@@ -1,0 +1,80 @@
+nohup: ignoring input
+INFO:     Started server process [3749]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:41900 - "GET /docs HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41902 - "POST /devices/register?device_id=edge-01&public_key_b64=v1Ltd9Dp1SSZPqnk5Mlkp1IQ8t9Zp0bd4rxclVLXNlQ%3D HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41904 - "POST /devices/register?device_id=edge-01&public_key_b64=v1Ltd9Dp1SSZPqnk5Mlkp1IQ8t9Zp0bd4rxclVLXNlQ%3D HTTP/1.1" 400 Bad Request
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41906 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+ERROR:CoreCommandAPI:Rejecting anchor from edge-01: Sequence overlap detected. Expected start 6, got 1
+INFO:     127.0.0.1:41908 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41910 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+ERROR:CoreCommandAPI:Rejecting anchor from edge-01: Sequence gap detected. Expected start 11, got 20
+INFO:     127.0.0.1:41912 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreValidator:Signature verification failed for device.
+WARNING:CoreCommandAPI:Rejecting anchor: Invalid signature for device edge-01
+INFO:     127.0.0.1:41914 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreCommandAPI:Rejecting anchor: Unknown device_id ghost-node
+INFO:     127.0.0.1:41916 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41918 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41922 - "GET /health HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41924 - "POST /devices/register?device_id=orin-splinter-01&public_key_b64=AqpTOBNls4AqkMgDYfv1kYJ8%2BXqqYB1eGmeKFW26FYs%3D HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /health HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41930 - "POST /anchors/batch HTTP/1.1" 422 Unprocessable Entity
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41934 - "POST /anchors/batch HTTP/1.1" 422 Unprocessable Entity
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41938 - "POST /anchors/batch HTTP/1.1" 422 Unprocessable Entity
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41942 - "POST /anchors/batch HTTP/1.1" 422 Unprocessable Entity
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreValidator:Signature verification failed for device.
+WARNING:CoreCommandAPI:Rejecting anchor: Invalid signature for device orin-splinter-01
+INFO:     127.0.0.1:41946 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreValidator:Signature verification failed for device.
+WARNING:CoreCommandAPI:Rejecting anchor: Invalid signature for device orin-splinter-01
+INFO:     127.0.0.1:41950 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreValidator:Signature verification failed for device.
+WARNING:CoreCommandAPI:Rejecting anchor: Invalid signature for device orin-splinter-01
+INFO:     127.0.0.1:41954 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreValidator:Signature verification failed for device.
+WARNING:CoreCommandAPI:Rejecting anchor: Invalid signature for device orin-splinter-01
+INFO:     127.0.0.1:41958 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreValidator:Signature verification failed for device.
+WARNING:CoreCommandAPI:Rejecting anchor: Invalid signature for device orin-splinter-01
+INFO:     127.0.0.1:41962 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreValidator:Signature verification failed for device.
+WARNING:CoreCommandAPI:Rejecting anchor: Invalid signature for device orin-splinter-01
+INFO:     127.0.0.1:41966 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreValidator:Signature verification failed for device.
+WARNING:CoreCommandAPI:Rejecting anchor: Invalid signature for device orin-splinter-01
+INFO:     127.0.0.1:41970 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:CoreValidator:Signature verification failed for device.
+WARNING:CoreCommandAPI:Rejecting anchor: Invalid signature for device orin-splinter-01
+INFO:     127.0.0.1:41974 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41978 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41982 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41986 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:41990 - "POST /anchors/batch HTTP/1.1" 200 OK
