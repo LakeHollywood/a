@@ -1,0 +1,20 @@
+# Parent slice for sts-core-command.service.
+# Declaring the limits on the slice as well gives belt-and-braces accounting:
+# any child processes uvicorn spawns (sqlite helpers, subprocess audits) are
+# capped by the SAME budget, so nothing escapes the quota via fork bombs.
+#
+# INSTALL:
+#     sudo cp bench/systemd/sts-core-command.slice /etc/systemd/system/
+#     sudo systemctl daemon-reload
+
+[Unit]
+Description=STS Core Command resource-isolation slice
+Before=multi-user.target
+
+[Slice]
+CPUQuota=20%
+MemoryMax=512M
+MemoryHigh=384M
+CPUWeight=150
+TasksMax=128
+ManagedOOMPreference=omit
