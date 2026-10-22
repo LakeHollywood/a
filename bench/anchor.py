@@ -781,6 +781,38 @@ class AnchorClient:
                 gate.get("reason"))
             return {"flushed": 0, "blocked": True, "gate": gate}
 
+        # Mesh/radio preflight: a forced sync must not burn approvals or hit
+        # the wire over a dead radio. DEGRADED (up, no peers) is allowed with
+        # a warning; DOWN/missing across all candidates blocks the flush.
+        link = None
+        if force:
+            try:
+                from mesh_link import verify_mesh_link
+            except ImportError:  # running as part of the bench package
+                from bench.mesh_link import verify_mesh_link
+            active, reports = verify_mesh_link(require_peers=True)
+            link = {"active": active.iface if active else None,
+                    "states": {r.iface: r.state for r in reports}}
+            if active is None:
+                degraded = [r.iface for r in reports if r.state == "DEGRADED"]
+                if degraded:
+                    logger.warning(
+                        "flush_now: link up but no RF peers visible (%s); "
+                        "proceeding with forced sync, batches will queue "
+                        "until mesh forms.", ", ".join(degraded))
+                else:
+                    logger.error(
+                        "flush_now BLOCKED by mesh preflight: all candidate "
+                        "interfaces down/missing (%s). Nothing sent; gate "
+                        "approvals untouched.",
+                        ", ".join(f"{r.iface}:{r.state}" for r in reports))
+                    return {"flushed": 0, "blocked": True, "gate": gate,
+                            "link": link,
+                            "block_reason": "mesh link down (no ACTIVE interface)"}
+            else:
+                logger.info("flush_now: mesh preflight OK via %s (peers=%d)",
+                            active.iface, active.peers)
+
         flushed = await self.quarantine.flush_quarantine_queue(
             sync_endpoint=self.endpoint)
         # Reconcile engine checkpoint states from queue statuses.

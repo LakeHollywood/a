@@ -8,3 +8,32 @@ INFO:     127.0.0.1:42464 - "GET /approvalgate/risk_score HTTP/1.1" 200 OK
 INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
 INFO:     127.0.0.1:42468 - "POST /anchors/batch HTTP/1.1" 200 OK
 INFO:     127.0.0.1:42470 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42480 - "GET /health HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:42482 - "GET /approvalgate/risk_score HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42486 - "POST /approvalgate/heartbeat HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:42488 - "POST /approvalgate/check_flush HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42492 - "POST /approvalgate/heartbeat HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:42492 - "POST /approvalgate/check_flush HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42496 - "POST /approvalgate/heartbeat HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:42496 - "POST /approvalgate/check_flush HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+ERROR:CoreCommandAPI:Rejecting anchor from orin-splinter-01: Sequence overlap detected. Expected start 251, got 1
+INFO:     127.0.0.1:42500 - "POST /anchors/batch HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42504 - "POST /approvalgate/heartbeat HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:ApprovalGate:BLOCKED: risk score 82 > threshold 75; requires 4 bundle approvals (have 0) or a signed operator override token
+INFO:     127.0.0.1:42506 - "POST /approvalgate/check_flush HTTP/1.1" 403 Forbidden
+INFO:     127.0.0.1:42510 - "POST /approvalgate/heartbeat HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:ApprovalGate:BLOCKED: risk score 82 > threshold 75; requires 4 bundle approvals (have 0) or a signed operator override token
+INFO:     127.0.0.1:42512 - "POST /approvalgate/check_flush HTTP/1.1" 403 Forbidden
+INFO:     127.0.0.1:42516 - "POST /approvalgate/heartbeat HTTP/1.1" 200 OK
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+WARNING:ApprovalGate:BLOCKED: risk score 82 > threshold 75; requires 4 bundle approvals (have 0) or a signed operator override token
+INFO:     127.0.0.1:42518 - "POST /approvalgate/check_flush HTTP/1.1" 403 Forbidden
+INFO:CoreDB:Core Command WORM database initialised at core_command_worm.db
+INFO:     127.0.0.1:42520 - "GET /approvalgate/risk_score HTTP/1.1" 200 OK
